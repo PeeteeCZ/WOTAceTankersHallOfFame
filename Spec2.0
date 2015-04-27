@@ -1,0 +1,132 @@
+Spec 2.0:
+
+DONE:
+- db filename hardcoded tankdb.json
+- random app id
+
+ALMOST:
+- data structure change and migration
+  - { "snapshotDate" : "2015-03-01",
+      "players" : [
+		{
+			"id" : 502595931,
+			"name" : "Tomylw",
+			"snapshots" : [
+				{
+					"date" : "2015-03-01",
+					"rating" : 1234,
+					"ratingRank" : 1,
+					"aceTankers" : 120,
+					"rankInAceTankers" : 1000
+				}
+			]
+		 }
+	  ]
+	}
+
+
+
+TODO:
+- logging of exceptions or bad data to log
+
+- generic repeater to make processes robust and self-recoverable
+  - called function either returns optional with value, without (to repeat) or throws exception (bail out)
+  
+- read nickname (account/info) with batches of 100 player IDs
+- read rating+ratingRank (ratings/accounts) with batches of 100 player IDs
+- read ace tankers (account/tanks) with batches of 100 player IDs WHEN SNAP DATE = yesterday, otherwise read 1 by 1 with (tanks/stats)
+
+
+
+
+	
+- merge two data files
+
+- check for new players against certain snapshot
+
+- MOEs - NO DATE FIELD
+        "marksOnGun": {
+            "name": "marksOnGun",
+            "section_i18n": "Battle Heroes",
+            "section": "battle",
+            "hero_info": null,
+            "order": 0,
+            "image_big": null,
+            "options": [
+                {
+                    "name_i18n": "1 Mark of Excellence",
+                    "image": null,
+                    "description": "To obtain two Marks of Excellence, displayed on the gun, the average damage caused by the player and average damage caused with the player's assistance must be higher than the results of 85% of players in this vehicle for the past 14 days.",
+                    "image_big": null
+                },
+                {
+                    "name_i18n": "2 Marks of Excellence",
+                    "image": null,
+                    "description": "To obtain three Marks of Excellence, displayed on the gun, the average damage caused by the player and average damage caused with the player's assistance must be higher than the results of 95% of players in this vehicle for the past 14 days.",
+                    "image_big": null
+                },
+                {
+                    "name_i18n": "3 Marks of Excellence",
+                    "image": null,
+                    "description": "The maximum number of Marks of Excellence is obtained.",
+                    "image_big": null
+                }
+            ],
+            "image": null,
+            "name_i18n": "Marks of Excellence",
+            "type": "class",
+            "section_order": 0,
+            "condition": "• Player's average damage is updated after each battle. Only the 100 recent battles are counted. \n• Obtained Marks do not disappear even if the player's average damage decreases.\n• Marks can be obtained in vehicles of Tiers V–X only.\n• Display of Marks on your vehicles can be disabled in game settings.\n• Can be obtained in Random Battles only.",
+            "description": "To obtain one Mark of Excellence, displayed on the gun, the average damage caused by the player and average damage caused with the player's assistance must be higher than the results of 65% of players in this vehicle for the past 14 days."
+        }
+
+	- https://api.worldoftanks.eu/wot/tanks/achievements/?application_id=demo&fields=achievements&account_id=500867464
+	
+	- {
+    "status": "ok",
+    "count": 1,
+    "meta": {
+        "count": 1
+    },
+    "data": {
+        "500867464": [
+            {
+                "achievements": {
+                    "medalCarius": 3,
+                    "marksOnGun": 1,
+                    "medalAbrams": 4,
+                    "medalLavrinenko": 4,
+                    "armorPiercer": 5,
+                    "medalEkins": 3,
+                    "medalKay": 4,
+                    "medalKnispel": 3,
+                    "bonecrusher": 62,
+                    "medalGore": 1,
+                    "markOfMastery": 3,
+                    "handOfDeath": 3,
+                    "mainGun": 2,
+                    "defender": 2,
+                    "demolition": 3,
+                    "fighter": 3,
+                    "arsonist": 2
+                }
+            },
+            {
+                "achievements": {
+                    "medalCarius": 4,
+                    "medalAbrams": 4,
+                    "titleSniper": 27,
+                    "warrior": 2,
+                    "medalPoppel": 3,
+                    "armorPiercer": 11,
+                    "medalKay": 4,
+                    "scout": 2,
+                    "kamikaze": 2,
+                    "medalLeClerc": 4,
+                    "medalKnispel": 4,
+                    "sniper": 4
+                }
+            }
+        ]
+    }
+}
