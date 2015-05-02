@@ -2,9 +2,7 @@ Spec 2.0:
 
 DONE:
 - db filename hardcoded tankdb.json
-- random app id
 
-ALMOST:
 - data structure change and migration
   - { "snapshotDate" : "2015-03-01",
       "players" : [
@@ -24,25 +22,28 @@ ALMOST:
 	  ]
 	}
 
+- generic repeater to make processes robust and self-recoverable
+  - called function either returns optional with value, without (to repeat) or throws exception (bail out)
+
+- logging of exceptions or bad data to log
+
+- check for new players against certain snapshot
+
+- read nickname (account/info) with batches of 100 player IDs
+
+- read rating+ratingRank (ratings/accounts) with batches of 100 player IDs
+
+- read ace tankers (account/tanks) with batches of 100 player IDs WHEN SNAP DATE = yesterday, otherwise read 1 by 1 with (tanks/stats)
+  - when all ace tankers are read, sort by them and assign ace tanker ranks
+
+
+  
+DOING:
 
 
 TODO:
-- logging of exceptions or bad data to log
 
-- generic repeater to make processes robust and self-recoverable
-  - called function either returns optional with value, without (to repeat) or throws exception (bail out)
-  
-- read nickname (account/info) with batches of 100 player IDs
-- read rating+ratingRank (ratings/accounts) with batches of 100 player IDs
-- read ace tankers (account/tanks) with batches of 100 player IDs WHEN SNAP DATE = yesterday, otherwise read 1 by 1 with (tanks/stats)
-
-
-
-
-	
-- merge two data files
-
-- check for new players against certain snapshot
+- add +- mark to ace rank and nr of ace tankers compared to custom snapshot (by default last-1)
 
 - MOEs - NO DATE FIELD
         "marksOnGun": {

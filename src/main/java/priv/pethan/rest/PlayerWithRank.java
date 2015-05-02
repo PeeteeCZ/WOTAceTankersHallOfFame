@@ -6,4 +6,5 @@ import lombok.Data;
 public class PlayerWithRank {
     private Rating global_rating;
     private Long account_id;
+    private String nickname;
 }

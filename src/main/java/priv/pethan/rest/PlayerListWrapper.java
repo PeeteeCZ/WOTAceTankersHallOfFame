@@ -7,5 +7,6 @@ import java.util.List;
 
 @Data
 public class PlayerListWrapper {
+    private String status;
     private List<PlayerWithRank> data = new ArrayList<>();
 }

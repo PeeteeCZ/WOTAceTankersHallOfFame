@@ -2,11 +2,11 @@ package priv.pethan.data;
 
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Data
 public class Player {
-    private Long rank;
-    private Long id;
     private String name;
-    private Long aceTankers;
-    private Long rankInAceTankers;
+    private Map<String, TimePoint> timePoints = new HashMap<>();
 }

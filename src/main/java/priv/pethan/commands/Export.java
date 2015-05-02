@@ -2,12 +2,21 @@ package priv.pethan.commands;
 
 import priv.pethan.Main;
 import priv.pethan.data.Player;
+import priv.pethan.data.TimePoint;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public class Export extends CommandBase {
 
@@ -18,36 +27,64 @@ public class Export extends CommandBase {
 
     @Override
     public void execute(String[] args) {
-        Long rowCountToExport = (args.length == 1) ? 10000 : Long.valueOf(args[1]);
+        Long rowCountToExport = 20000L;
+
+        LocalDate snapshotDateDate = null;
+
+        for (int idx = 1; idx < args.length; idx++) {
+            String arg = args[idx];
+
+            try {
+                snapshotDateDate = LocalDate.parse(arg);
+            } catch (DateTimeParseException ex) {
+                rowCountToExport = Long.valueOf(arg);
+            }
+        }
 
         loadFromFile();
 
-        Collections.sort(playerList.getPlayers(), (p, q) -> q.getAceTankers().compareTo(p.getAceTankers()));
+        String snapshotDate = isNull(snapshotDateDate) ? getLastSnapshotDate() : snapshotDateDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        long counter = 0;
-        long lastAceTankers = 0;
-        for (Player player : playerList.getPlayers()) {
-            if (!player.getAceTankers().equals(lastAceTankers)) {
-                counter++;
-                lastAceTankers = player.getAceTankers();
-            }
-            player.setRankInAceTankers(counter);
-        }
+        Map<Long, Player> withSnapshots = playerBase.getPlayers().entrySet().stream()
+                .filter(entry -> entry.getValue().getTimePoints().containsKey(snapshotDate))
+                .collect(toMap(Entry::getKey, Entry::getValue));
+
+
+        List<Entry<Long, Player>> sorted = withSnapshots.entrySet().stream()
+                .sorted((e1, e2) -> {
+                    Long aces1 = e1.getValue().getTimePoints().get(snapshotDate).getAceTankersRank();
+                    Long aces2 = e2.getValue().getTimePoints().get(snapshotDate).getAceTankersRank();
+
+                    if (aces1.equals(aces2)) return e1.getValue().getTimePoints().get(snapshotDate).getWotRank().compareTo(e2.getValue().getTimePoints().get(snapshotDate).getWotRank());
+                    return aces1.compareTo(aces2);
+                })
+                .collect(toList());
 
         System.out.println("Exporting as html");
-        exportAsHtml(rowCountToExport);
+        exportAsHtml(sorted, snapshotDate, rowCountToExport);
+        System.out.println("Done");
     }
 
-    private void exportAsHtml(Long rowCountToExport) {
+    private String getLastSnapshotDate() {
+        Set<String> snapshotDates = new TreeSet<>();
+        playerBase.getPlayers().values().stream().forEach(player -> snapshotDates.addAll(player.getTimePoints().keySet()));
+        return snapshotDates.stream().max(Comparator.<String>naturalOrder()).get();
+    }
+
+    private void exportAsHtml(List<Entry<Long, Player>> sorted, String snapshotDate, Long rowCountToExport) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(Main.dataFileName + ".html")))) {
-            bw.write(getHtmlPageStart());
+            bw.write(getHtmlPageStart(rowCountToExport, snapshotDate));
             bw.newLine();
 
             long counter = 1;
-            for(Player player : playerList.getPlayers()) {
-                bw.write(String.format("<tr%6$s><td>%1$d</td><td>%2$d</td><td><a href=\"http://worldoftanks.eu/community/accounts/%3$d-%4$s/\">%4$s</a></td><td>%5$d</td></tr>",
-                        player.getRankInAceTankers(), player.getRank(), player.getId(), player.getName(), player.getAceTankers(), (counter % 2 == 0) ? " class=\"odd\"" : ""));
+            for(Entry<Long, Player> entry : sorted) {
+                Player player = entry.getValue();
+                TimePoint timePoint = player.getTimePoints().get(snapshotDate);
+
+                bw.write(String.format("<tr%7$s><td><a href=\"http://worldoftanks.eu/community/accounts/%3$d-%4$s/\">%4$s</a></td><td>%1$d</td><td>%2$d</td><td>%5$d</td><td>%6$d</td></tr>",
+                        timePoint.getAceTankersRank(), timePoint.getAceTankers(), entry.getKey(), player.getName(), timePoint.getWotRank(), timePoint.getWotRating(), (counter % 2 == 0) ? " class=\"odd\"" : ""));
                 bw.newLine();
+
                 counter++;
                 if (rowCountToExport.equals(counter)) {
                     break;
@@ -63,7 +100,7 @@ public class Export extends CommandBase {
         }
     }
 
-    private String getHtmlPageStart() {
+    private String getHtmlPageStart(Long rowCountToExport, String snapshotDate) {
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "\t<head>\n" +
@@ -117,15 +154,16 @@ public class Export extends CommandBase {
                 "\t\t<td><img src=\"http://worldoftanks.eu/static/3.26.0.4/common/img/classes/class-ace.png\"/></td>\n" +
                 "\t\t</tr>\n" +
                 "\t\t<tr>\n" +
-                "\t\t\t<td colspan=\"3\">First 20,000 players according to number of ace tankers from top 500,000 by personal rating</td>\n" +
+                "\t\t\t<td colspan=\"3\">First " + rowCountToExport + " players according to number of ace tankers from top 500,000 by personal rating " + snapshotDate + "</td>\n" +
                 "\t\t</tr>\n" +
                 "\t\t</table>\n" +
                 "\t\t\n" +
                 "\t\t<table>\n" +
-                "\t\t\t<th>Ace Rank</th>\n" +
-                "\t\t\t<th>PR Rank</th>\n" +
                 "\t\t\t<th>Player</th>\n" +
-                "\t\t\t<th>Ace Tankers</th>";
+                "\t\t\t<th>Ace Rank</th>\n" +
+                "\t\t\t<th>Ace Tankers</th>\n" +
+                "\t\t\t<th>WOT Rank</th>\n" +
+                "\t\t\t<th>WOT Rating</th>";
     }
 
     private String getHtmlPageEnd() {
